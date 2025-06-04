@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% load widget_tweaks %}
+<div class="container mt-5 d-flex justify-content-center">
+  <div class="card shadow-sm p-5" style="max-width: 720px; width: 100%;">
+    <h2 class="mb-4 text-center fw-bold">Add Product</h2>
+    <form method="POST" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      <!-- Product Form -->
+      {% for field in form %}
+        <div class="mb-4">
+          <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+          {{ field|add_class:"form-control" }}
+          {% for error in field.errors %}
+            <div class="form-text text-danger">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <hr class="my-5">
+
+      <!-- Variation Formset -->
+      <h5 class="mb-4 fw-semibold">Product Variations</h5>
+      {{ formset.management_form }}
+
+      {% for variation_form in formset %}
+        <div class="border rounded p-4 mb-4 bg-light">
+          {% for field in variation_form.visible_fields %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field|add_class:"form-control" }}
+              {% for error in field.errors %}
+                <div class="form-text text-danger">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <div class="d-flex justify-content-center mt-4">
+        <button type="submit" class="btn btn-primary btn-lg fw-semibold shadow-sm">
+          Add Product
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
