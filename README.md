@@ -108,12 +108,18 @@ python manage.py test
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!
-Feel free to check the [issues page](https://github.com/Dhananjay66/megacart/issues).
+We love contributions from the community!
+
+- 🐞 Found a bug? [Open an issue](https://github.com/Dhananjay66/megacart/issues).
+- 🚀 Want to add a new feature? Fork the repo and submit a PR.
+- 📄 Make sure to update documentation if needed.
+- ✅ Please test your code before submitting.
+
+Thank you for making this project better! 💖
 
 ---
 
-## 💬 Contact
+## 📧 Contact
 
 For any query or collaboration:  
 📧 [pratapsinghd665@gmail.com]
