@@ -1,4 +1,4 @@
-# 🛒 MegaCart - E-commerce Platform (Django)
+# 🛒 MegaCart - E-Commerce Platform (Django)
 
 **MegaCart** is a full-featured, scalable e-commerce platform built using Django. It supports multi-role user management (admin, seller, customer), a dynamic product catalog, secure checkout, and a powerful admin dashboard.
 
@@ -19,7 +19,13 @@
 
 ---
 
-## 🧱 Project Structure
+## 🌍 Live Demo
+
+> 🔗 **Live Demo**: [Click Here](https://megacart-3cmg.onrender.com)
+
+---
+
+## 📁 Project Structure
 
 ```
 MegaCart/
@@ -100,13 +106,20 @@ python manage.py test
 
 ---
 
-## 🙌 Contributing
+## 🤝 Contributing
 
-Pull requests are welcome! For major changes, open an issue first to discuss what you'd like to change.
+We love contributions from the community!
+
+- 🐞 Found a bug? [Open an issue](https://github.com/Dhananjay66/megacart/issues).
+- 🚀 Want to add a new feature? Fork the repo and submit a PR.
+- 📄 Make sure to update documentation if needed.
+- ✅ Please test your code before submitting.
+
+Thank you for making this project better! 💖
 
 ---
 
-## 💬 Contact
+## 📧 Contact
 
 For any query or collaboration:  
 📧 [pratapsinghd665@gmail.com]
