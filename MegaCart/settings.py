@@ -17,6 +17,9 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
+GOOGLE_CLIENT_ID     = config("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = config("GOOGLE_CLIENT_SECRET")
+
 ALLOWED_HOSTS = ['*']
 
 
@@ -231,8 +234,8 @@ SOCIALACCOUNT_ADAPTER = "accounts.adapters.MySocialAccountAdapter"
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': '1037779242430-krbmakmtabjdps09nrqr4923vc1js3rr.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': GOOGLE_CLIENT_ID,
+            'secret': GOOGLE_CLIENT_SECRET,
             'key': ''
         },
         'AUTH_PARAMS': {
