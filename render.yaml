@@ -1,0 +1,39 @@
+# render.yaml — Render Blueprint for **MegaCart** (Django + Google OAuth)
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: megacart
+    env: python                # Runtime
+    plan: free                 # or "starter", "standard", …
+    branch: main               # Git branch to deploy
+    region: oregon             # Closest Render region
+    autoDeploy: true           # Re‑deploy on every push
+
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate --noinput
+
+    startCommand: gunicorn megacart.wsgi:application --log-file -
+    healthCheckPath: /
+
+    # ───── Persistent uploads (product images) ─────
+    disk:
+      name: media
+      mountPath: /opt/render/project/src/media   # match Django MEDIA_ROOT
+      sizeGB: 1                                  # increase as needed
+
+    # ───── Environment variables ─────
+    envVars:
+      # Django core
+      - key: SECRET_KEY
+        sync: false            # add via Render Dashboard
+      - key: DEBUG
+        value: "False"
+
+      # Google OAuth2
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
