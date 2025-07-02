@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% load socialaccount %}
+
+{% block content %}
+
+<section class="section-conten padding-y" style="min-height:84vh">
+  <div class="card mx-auto" style="max-width: 380px; margin-top:100px;">
+    <div class="card-body">
+      <h4 class="card-title mb-4">Login</h4>
+      {% include 'includes/alerts.html' %}
+
+      <form action="{% url 'login' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <input type="email" class="form-control" placeholder="Email Address" name="email">
+        </div>
+        <div class="form-group">
+          <input type="password" class="form-control" placeholder="Password" name="password">
+        </div>
+
+        <div class="d-flex justify-content-between w-100 mb-3">
+          <a href="{% url 'enter_contact' %}">Login with OTP</a>
+          <a href="{% url 'forgotPassword' %}">Forgot password?</a>
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary btn-block"> Login </button>
+        </div>
+
+        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-light d-block mx-auto" style="width: 60%; margin-top: 10px; color: black;">
+          <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20"> Login with Google
+        </a>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

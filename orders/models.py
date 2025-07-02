@@ -1,19 +1,47 @@
 from django.db import models
 from accounts.models import Account
 from store.models import Product, Variation
+from django.core.validators import MinValueValidator
 
 
 
 class Payment(models.Model):
+    PAYMENT_METHODS = (
+        ('COD', 'Cash On Delivery'),
+        ('UPI', 'UPI'),
+        ('Card', 'Credit/Debit Card'),
+        # Add more if needed
+    )
+
+    PAYMENT_STATUS = (
+        ('Pending', 'Pending'),
+        ('Paid', 'Paid'),
+        ('Failed', 'Failed'),
+        ('Cancelled', 'Cancelled'),
+    )
+    DELIVERY_STATUS = (
+        ('Pending', 'Pending'),
+        ('Shipped', 'Shipped'),
+        ('Out for Delivery', 'Out for Delivery'),
+        ('Delivered', 'Delivered'),
+        ('Returned', 'Returned'),
+    )
+
+
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
-    payment_id = models.CharField(max_length=100)
-    payment_method = models.CharField(max_length=100)
-    amount_paid = models.CharField(max_length=100) # this is the total amount paid
-    status = models.CharField(max_length=100)
+    payment_id = models.CharField(max_length=100, blank=True, null=True)
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHODS)
+    amount_paid = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+    )
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='Pending')
+    delivery_status = models.CharField(max_length=20, choices=DELIVERY_STATUS, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.payment_id
+        return f'Payment #{self.id} | {self.payment_method} | {self.status}'
 
 
 class Order(models.Model):

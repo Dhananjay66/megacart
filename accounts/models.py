@@ -1,13 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-# from django.contrib.auth.models import AbstractBaseUser, 
 
+from django.utils import timezone
+from datetime import timedelta
 
 
 # Create your models here.
 
 class MyAccountManager(BaseUserManager):
-    def create_user(self, first_name, last_name, username, email, password=None):
+    def create_user(self, first_name, last_name, username, email, password=None, role='Customer'):
         if not email:
             raise ValueError('User must have an email address')
 
@@ -19,6 +20,7 @@ class MyAccountManager(BaseUserManager):
             username = username,
             first_name = first_name,
             last_name = last_name,
+            role = role,
         )
 
         user.set_password(password)
@@ -32,6 +34,7 @@ class MyAccountManager(BaseUserManager):
             password = password,
             first_name = first_name,
             last_name = last_name,
+            role = 'Admin',
         )
         user.is_admin = True
         user.is_active = True
@@ -65,7 +68,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_superadmin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
@@ -100,3 +103,15 @@ class UserProfile(models.Model):
 
     def full_address(self):
         return f'{self.address_line_1} {self.address_line_2}'
+
+
+class OTP(models.Model):
+    contact = models.EmailField()
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def is_valid(self):
+        return timezone.now() <= self.created_at + timedelta(minutes=5)
+
+    def __str__(self):
+        return f"{self.contact} - {self.code}"

@@ -49,6 +49,7 @@
                                         <li><strong>Transaction ID</strong> {{transID}}</li>
                                         <li><strong>Order Date:</strong> {{order.created_at}}</li>
                                         <li><strong>Status:</strong> {{payment.status}}</li>
+                                        <li><strong>Delivery Status:</strong> {{ payment.delivery_status }}</li>
                                     </ul>
                                 </div>
                             </div>
@@ -109,9 +110,16 @@
             </div>
             <!-- End .panel -->
         </div>
+        
         <!-- col-lg-12 end here -->
     </div>
+    <div class="text-right mt-3">
+        <a href="{% url 'download_invoice' order_number=order.order_number payment_id=payment.payment_id %}" class="btn btn-secondary float-end">
+            Download Invoice
+        </a>
     </div>
+</div>
+
 
 
 {% endblock %}

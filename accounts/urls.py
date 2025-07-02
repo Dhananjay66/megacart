@@ -1,15 +1,23 @@
 from django.urls import path
 from . import views
+from .views import login_view, complete_profile
+from .views import enter_contact_view, verify_otp_view, login_otp_page
 
 
 urlpatterns = [
     path('register/', views.register, name='register'),
-    path('login/', views.login, name='login'),
+
+    path('login/', login_view, name='login'),  # Your original login
+    
+    path('customer/home/', views.customer_home, name='customer_home'),
+
+    path('login_otp/', login_otp_page, name='login_otp'),
+    path('otp/', enter_contact_view, name='enter_contact'),  # Enter email
+    path('verify/', verify_otp_view, name='verify_otp'),  # OTP entry
+
     path('logout/', views.logout, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('', views.dashboard, name='dashboard'),
-
-    # path('seller/dashboard/', views.seller_dashboard, name='seller_dashboard'),
+    # path('', views.dashboard, name='dashboard'),
 
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     path('forgotPassword/', views.forgotPassword, name='forgotPassword'),
@@ -20,4 +28,8 @@ urlpatterns = [
     path('edit_profile/', views.edit_profile, name='edit_profile'),
     path('change_password/', views.change_password, name='change_password'),
     path('order_detail/<int:order_id>/', views.order_detail, name='order_detail'),
+
+
+    path('complete-profile/', complete_profile, name='complete_profile'),
+
 ]

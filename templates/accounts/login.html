@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load static %}
+{% load socialaccount %}
 
 {% block content %}
 
@@ -31,13 +33,19 @@ Already verified? <a href="{% url 'login' %}">Login</a>
 			<input type="password" class="form-control" placeholder="Password" name="password">
           </div> <!-- form-group// -->
 
-          <div class="form-group">
-          	<a href="{% url 'forgotPassword' %}" class="float-right">Forgot password?</a>
-
-          </div> <!-- form-group form-check .// -->
+      <div class="d-flex justify-content-between w-100 mb-3">
+          <a href="{% url 'enter_contact' %}">Login with OTP</a>
+          <a href="{% url 'forgotPassword' %}">Forgot password?</a>
+      </div>
+ <!-- form-group form-check .// -->
           <div class="form-group">
               <button type="submit" class="btn btn-primary btn-block"> Login  </button>
           </div> <!-- form-group// -->
+          <a href="{% provider_login_url 'google' %}" class="btn btn-outline-light d-block mx-auto" style="width: 60%; margin-top: 10px; color: black;">
+    					<img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20">
+						Login with Google
+					</a>
+
       </form>
       </div> <!-- card-body.// -->
     </div> <!-- card .// -->
