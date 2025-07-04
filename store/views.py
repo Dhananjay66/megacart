@@ -6,7 +6,7 @@ from django.db.models import Q
 
 from carts.views import _cart_id
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .forms import ReviewForm
 from django.contrib import messages
 from orders.models import OrderProduct
@@ -42,6 +42,35 @@ def store(request, category_slug=None):
     return render(request, 'store/store.html', context)
 
 
+# def product_detail(request, category_slug, product_slug):
+#     try:
+#         single_product = Product.objects.get(category__slug=category_slug, slug=product_slug)
+#         in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=single_product).exists()
+#     except Exception as e:
+#         raise e
+
+#     if request.user.is_authenticated:
+#         try:
+#             orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
+#         except OrderProduct.DoesNotExist:
+#             orderproduct = None
+#     else:
+#         orderproduct = None
+
+#     # Get the reviews
+#     reviews = ReviewRating.objects.filter(product_id=single_product.id, status=True)
+
+#     # Get the product gallery
+#     product_gallery = ProductGallery.objects.filter(product_id=single_product.id)
+
+#     context = {
+#         'single_product': single_product,
+#         'in_cart'       : in_cart,
+#         'orderproduct': orderproduct,
+#         'reviews': reviews,
+#         'product_gallery': product_gallery,
+#     }
+#     return render(request, 'store/product_detail.html', context)
 def product_detail(request, category_slug, product_slug):
     try:
         single_product = Product.objects.get(category__slug=category_slug, slug=product_slug)
@@ -50,25 +79,28 @@ def product_detail(request, category_slug, product_slug):
         raise e
 
     if request.user.is_authenticated:
-        try:
-            orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
-        except OrderProduct.DoesNotExist:
-            orderproduct = None
+        orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
     else:
         orderproduct = None
 
-    # Get the reviews
+    # Reviews
     reviews = ReviewRating.objects.filter(product_id=single_product.id, status=True)
 
-    # Get the product gallery
+    # Product gallery
     product_gallery = ProductGallery.objects.filter(product_id=single_product.id)
+
+    # 🔥 Variation price data
+    color_variations = Variation.objects.filter(product=single_product, variation_category='color', is_active=True)
+    size_variations = Variation.objects.filter(product=single_product, variation_category='size', is_active=True)
 
     context = {
         'single_product': single_product,
-        'in_cart'       : in_cart,
+        'in_cart': in_cart,
         'orderproduct': orderproduct,
         'reviews': reviews,
         'product_gallery': product_gallery,
+        'color_variations': color_variations,
+        'size_variations': size_variations,
     }
     return render(request, 'store/product_detail.html', context)
 
@@ -169,3 +201,57 @@ def add_product(request):
 #         formset = ProductFormSet(queryset=Variation.objects.none())
 
 #     return render(request, 'add_product.html', {'form': form, 'formset': formset})
+
+
+
+def check_variation_stock(request):
+    product_id = request.GET.get('product_id')
+    color = request.GET.get('color')
+    size = request.GET.get('size')
+
+    try:
+        variations = Variation.objects.filter(product_id=product_id, is_active=True)
+        if color:
+            variations = variations.filter(variation_category='color', variation_value__iexact=color)
+        if size:
+            variations = variations.filter(variation_category='size', variation_value__iexact=size)
+
+        if variations.exists():
+            return JsonResponse({'available': True})
+        else:
+            return JsonResponse({'available': False})
+    except:
+        return JsonResponse({'available': False})
+
+
+@login_required
+def buy_now(request, product_id):
+    product = Product.objects.get(id=product_id)
+    
+    # Get selected variation from POST
+    product_variation = []
+    if request.method == 'POST':
+        for item in request.POST:
+            key = item
+            value = request.POST[key]
+            if key != 'csrfmiddlewaretoken':
+                try:
+                    variation = product.variation_set.get(variation_category__iexact=key, variation_value__iexact=value)
+                    product_variation.append(variation)
+                except:
+                    pass
+
+    # Delete existing cart items so only selected item goes to checkout
+    CartItem.objects.filter(user=request.user).delete()
+
+    # Add only this item to cart
+    cart_item = CartItem.objects.create(
+        product=product,
+        quantity=1,
+        user=request.user,
+    )
+    if len(product_variation) > 0:
+        cart_item.variations.add(*product_variation)
+    cart_item.save()
+
+    return redirect('checkout')

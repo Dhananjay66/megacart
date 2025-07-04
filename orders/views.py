@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from carts.models import CartItem
 from .forms import OrderForm
@@ -40,7 +40,10 @@ def confirm_payment(request):
             order.save()
 
             # Move cart items to OrderProduct
-            cart_items = CartItem.objects.filter(user=user)
+            if 'buy_now_item_id' in request.session:
+                cart_items = [get_object_or_404(CartItem, id=request.session['buy_now_item_id'], user=user)]
+            else:
+                cart_items = CartItem.objects.filter(user=user, order__isnull=True)
             for item in cart_items:
                 orderproduct = OrderProduct.objects.create(
                     order=order,
@@ -57,8 +60,13 @@ def confirm_payment(request):
                 item.product.stock -= item.quantity
                 item.product.save()
 
-            # Clear cart
-            CartItem.objects.filter(user=user).delete()
+            # Clear only the relevant cart item(s)
+            if 'buy_now_item_id' in request.session:
+                CartItem.objects.filter(id=request.session['buy_now_item_id'], user=request.user).delete()
+                del request.session['buy_now_item_id']
+            else:
+                CartItem.objects.filter(user=request.user, order__isnull=True).delete()
+
 
             # Send confirmation email
             mail_subject = 'Thank you for your order!'
@@ -81,82 +89,92 @@ def payments(request):
     order = Order.objects.get(user=request.user, is_ordered=False, order_number=body['orderID'])
 
     # Store transaction details inside Payment model
-    payment = Payment(
+    payment = Payment.objects.create(
         user=request.user,
         payment_id=body['transID'],
         payment_method=body['payment_method'],
         amount_paid=order.order_total,
         status=body['status'],
-        delivery_status='Pending',  # Set initial delivery status
+        delivery_status='Pending',
     )
-    payment.save()
 
     order.payment = payment
     order.is_ordered = True
     order.save()
 
-    # Move cart items to OrderProduct
-    cart_items = CartItem.objects.filter(user=request.user)
-    for item in cart_items:
-        orderproduct = OrderProduct()
-        orderproduct.order = order
-        orderproduct.payment = payment
-        orderproduct.user = request.user
-        orderproduct.product = item.product
-        orderproduct.quantity = item.quantity
-        orderproduct.product_price = item.product.price
-        orderproduct.ordered = True
-        orderproduct.save()
+    # Choose cart items based on session
+    if 'buy_now_item_id' in request.session:
+        cart_items = [get_object_or_404(CartItem, id=request.session['buy_now_item_id'], user=request.user)]
+    else:
+        cart_items = CartItem.objects.filter(user=request.user, order__isnull=True)
 
-        orderproduct.variations.set(item.variations.all())
-        orderproduct.save()
+    # Create OrderProduct objects
+    for item in cart_items:
+        OrderProduct.objects.create(
+            order=order,
+            payment=payment,
+            user=request.user,
+            product=item.product,
+            quantity=item.quantity,
+            product_price=item.price if item.price else item.product.price,
+            ordered=True,
+        ).variations.set(item.variations.all())
 
         # Reduce stock
-        product = item.product
-        product.stock -= item.quantity
-        product.save()
+        item.product.stock -= item.quantity
+        item.product.save()
 
-    # Clear the cart
-    CartItem.objects.filter(user=request.user).delete()
+    # Delete only the relevant cart items
+    if 'buy_now_item_id' in request.session:
+        CartItem.objects.filter(id=request.session['buy_now_item_id'], user=request.user).delete()
+        del request.session['buy_now_item_id']
+    else:
+        CartItem.objects.filter(user=request.user, order__isnull=True).delete()
 
-    # Send order received email
+    # Send email
     mail_subject = 'Thank you for your order!'
     message = render_to_string('orders/order_recieved_email.html', {
         'user': request.user,
         'order': order,
     })
     to_email = request.user.email
-    send_email = EmailMessage(mail_subject, message, to=[to_email])
-    send_email.send()
+    EmailMessage(mail_subject, message, to=[to_email]).send()
 
-    # Return response
     return JsonResponse({
         'order_number': order.order_number,
         'transID': payment.payment_id,
     })
 
 
-def place_order(request, total=0, quantity=0,):
+
+def place_order(request, total=0, quantity=0):
     current_user = request.user
 
-    # If the cart count is less than or equal to 0, then redirect back to shop
-    cart_items = CartItem.objects.filter(user=current_user)
-    cart_count = cart_items.count()
-    if cart_count <= 0:
-        return redirect('store')
+    # Check if it's a Buy Now order (single item)
+    buy_now_item_id = request.session.get('buy_now_item_id')
+
+    if buy_now_item_id:
+        cart_items = [get_object_or_404(CartItem, id=buy_now_item_id, user=current_user)]
+        is_buy_now = True
+    else:
+        cart_items = CartItem.objects.filter(user=current_user, order__isnull=True)
+        is_buy_now = False
 
     grand_total = 0
     tax = 0
+
     for cart_item in cart_items:
-        total += (cart_item.product.price * cart_item.quantity)
+        item_price = cart_item.price if cart_item.price else cart_item.product.price
+        total += item_price * cart_item.quantity
         quantity += cart_item.quantity
-    tax = (2 * total)/100
-    grand_total = total + tax
+
+    tax = round((2 * total) / 100, 2)
+    grand_total = round(total + tax, 2)
 
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            # Store all the billing information inside Order table
+            # Save order info
             data = Order()
             data.user = current_user
             data.first_name = form.cleaned_data['first_name']
@@ -173,27 +191,32 @@ def place_order(request, total=0, quantity=0,):
             data.tax = tax
             data.ip = request.META.get('REMOTE_ADDR')
             data.save()
+
             # Generate order number
-            yr = int(datetime.date.today().strftime('%Y'))
-            dt = int(datetime.date.today().strftime('%d'))
-            mt = int(datetime.date.today().strftime('%m'))
-            d = datetime.date(yr,mt,dt)
-            current_date = d.strftime("%Y%m%d") #20210305
+            current_date = datetime.date.today().strftime("%Y%m%d")
             order_number = current_date + str(data.id)
             data.order_number = order_number
             data.save()
 
-            order = Order.objects.get(user=current_user, is_ordered=False, order_number=order_number)
+            # Link order to the cart items (but don’t delete anything here)
+            for item in cart_items:
+                item.order = data
+                item.save()
+
             context = {
-                'order': order,
+                'order': data,
                 'cart_items': cart_items,
                 'total': total,
                 'tax': tax,
                 'grand_total': grand_total,
+                'is_buy_now': is_buy_now,
+                'buy_now_item': cart_items[0] if is_buy_now else None,
             }
             return render(request, 'orders/payments.html', context)
-    else:
-        return redirect('checkout')
+
+    return redirect('checkout')
+
+
 
 
 def order_complete(request):
@@ -202,13 +225,15 @@ def order_complete(request):
 
     try:
         order = Order.objects.get(order_number=order_number, is_ordered=True)
-        ordered_products = OrderProduct.objects.filter(order_id=order.id)
+        payment = Payment.objects.get(payment_id=transID)
+        ordered_products = OrderProduct.objects.filter(order=order)
 
         subtotal = 0
-        for i in ordered_products:
-            subtotal += i.product_price * i.quantity
+        for item in ordered_products:
+            subtotal += item.product_price * item.quantity
 
-        payment = Payment.objects.get(payment_id=transID)
+        tax = round((2 * subtotal) / 100, 2)
+        grand_total = round(subtotal + tax, 2)
 
         context = {
             'order': order,
@@ -217,10 +242,14 @@ def order_complete(request):
             'transID': payment.payment_id,
             'payment': payment,
             'subtotal': subtotal,
+            'tax': tax,
+            'grand_total': grand_total,
         }
         return render(request, 'orders/order_complete.html', context)
-    except (Payment.DoesNotExist, Order.DoesNotExist):
+
+    except (Order.DoesNotExist, Payment.DoesNotExist):
         return redirect('home')
+
 
 def download_invoice(request, order_number, payment_id):
     try:
