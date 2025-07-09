@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3">My Addresses</h3>
+  <a href="{% url 'add_address' %}" class="btn btn-success mb-3">+ Add New Address</a>
+
+  {% if addresses %}
+    <div class="row">
+      {% for address in addresses %}
+      <div class="col-md-6 mb-3">
+        <div class="card p-3 shadow-sm {% if address.is_default %}border-primary{% endif %}">
+          <h5>{{ address.full_name }}</h5>
+          <p>
+            {{ address.phone }}<br>
+            {{ address.address_line_1 }}<br>
+            {{ address.address_line_2 }}<br>
+            {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}
+          </p>
+          {% if address.is_default %}
+            <span class="badge bg-primary">Default</span>
+          {% else %}
+            <a href="{% url 'set_default_address' address.id %}" class="btn btn-sm btn-outline-primary">Set as Default</a>
+          {% endif %}
+          <br><br>
+          <a href="{% url 'edit_address' address.id %}" class="btn btn-sm btn-warning">Edit</a>
+          <a href="{% url 'delete_address' address.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>You have not added any address yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

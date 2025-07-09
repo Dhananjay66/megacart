@@ -29,7 +29,9 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     path('order_detail/<int:order_id>/', views.order_detail, name='order_detail'),
 
+    path('add_address/', views.add_address, name='add_address'),
 
+    path('set-default-address/', views.set_default_address, name='set_default_address'),
     path('complete-profile/', complete_profile, name='complete_profile'),
 
 ]

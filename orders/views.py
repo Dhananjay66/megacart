@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from carts.models import CartItem
+from accounts.models import UserAddress
 from .forms import OrderForm
 import datetime
 from .models import Order, Payment, OrderProduct
@@ -13,8 +14,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-
-
+from django.contrib import messages
 
 @csrf_exempt
 def confirm_payment(request):
@@ -44,21 +44,24 @@ def confirm_payment(request):
                 cart_items = [get_object_or_404(CartItem, id=request.session['buy_now_item_id'], user=user)]
             else:
                 cart_items = CartItem.objects.filter(user=user, order__isnull=True)
+            
             for item in cart_items:
-                orderproduct = OrderProduct.objects.create(
-                    order=order,
-                    payment=payment,
-                    user=user,
-                    product=item.product,
-                    quantity=item.quantity,
-                    product_price=item.product.price,
-                    ordered=True
-                )
-                orderproduct.variations.set(item.variations.all())
+                # Check if OrderProduct already exists to prevent duplicates
+                if not OrderProduct.objects.filter(order=order, product=item.product, user=user).exists():
+                    orderproduct = OrderProduct.objects.create(
+                        order=order,
+                        payment=payment,
+                        user=user,
+                        product=item.product,
+                        quantity=item.quantity,
+                        product_price=item.product.price,
+                        ordered=True
+                    )
+                    orderproduct.variations.set(item.variations.all())
 
-                # Reduce stock
-                item.product.stock -= item.quantity
-                item.product.save()
+                    # Reduce stock
+                    item.product.stock -= item.quantity
+                    item.product.save()
 
             # Clear only the relevant cart item(s)
             if 'buy_now_item_id' in request.session:
@@ -66,7 +69,6 @@ def confirm_payment(request):
                 del request.session['buy_now_item_id']
             else:
                 CartItem.objects.filter(user=request.user, order__isnull=True).delete()
-
 
             # Send confirmation email
             mail_subject = 'Thank you for your order!'
@@ -80,8 +82,10 @@ def confirm_payment(request):
             return redirect(f'/order_complete/?order_number={order.order_number}&payment_id={payment.payment_id}')
 
         except Order.DoesNotExist:
-            return redirect('store')
-    return redirect('store')
+            messages.error(request, "Order not found. Please try again.")
+            return redirect('checkout')
+    
+    return redirect('checkout')
 
 
 def payments(request):
@@ -110,19 +114,22 @@ def payments(request):
 
     # Create OrderProduct objects
     for item in cart_items:
-        OrderProduct.objects.create(
-            order=order,
-            payment=payment,
-            user=request.user,
-            product=item.product,
-            quantity=item.quantity,
-            product_price=item.price if item.price else item.product.price,
-            ordered=True,
-        ).variations.set(item.variations.all())
+        # Check if OrderProduct already exists to prevent duplicates
+        if not OrderProduct.objects.filter(order=order, product=item.product, user=request.user).exists():
+            orderproduct = OrderProduct.objects.create(
+                order=order,
+                payment=payment,
+                user=request.user,
+                product=item.product,
+                quantity=item.quantity,
+                product_price=item.price if item.price else item.product.price,
+                ordered=True,
+            )
+            orderproduct.variations.set(item.variations.all())
 
-        # Reduce stock
-        item.product.stock -= item.quantity
-        item.product.save()
+            # Reduce stock
+            item.product.stock -= item.quantity
+            item.product.save()
 
     # Delete only the relevant cart items
     if 'buy_now_item_id' in request.session:
@@ -146,76 +153,165 @@ def payments(request):
     })
 
 
-
-def place_order(request, total=0, quantity=0):
-    current_user = request.user
-
-    # Check if it's a Buy Now order (single item)
-    buy_now_item_id = request.session.get('buy_now_item_id')
-
-    if buy_now_item_id:
-        cart_items = [get_object_or_404(CartItem, id=buy_now_item_id, user=current_user)]
-        is_buy_now = True
-    else:
-        cart_items = CartItem.objects.filter(user=current_user, order__isnull=True)
-        is_buy_now = False
-
-    grand_total = 0
-    tax = 0
-
-    for cart_item in cart_items:
-        item_price = cart_item.price if cart_item.price else cart_item.product.price
-        total += item_price * cart_item.quantity
-        quantity += cart_item.quantity
-
-    tax = round((2 * total) / 100, 2)
-    grand_total = round(total + tax, 2)
-
+def place_order(request):
     if request.method == 'POST':
-        form = OrderForm(request.POST)
-        if form.is_valid():
-            # Save order info
-            data = Order()
-            data.user = current_user
-            data.first_name = form.cleaned_data['first_name']
-            data.last_name = form.cleaned_data['last_name']
-            data.phone = form.cleaned_data['phone']
-            data.email = form.cleaned_data['email']
-            data.address_line_1 = form.cleaned_data['address_line_1']
-            data.address_line_2 = form.cleaned_data['address_line_2']
-            data.country = form.cleaned_data['country']
-            data.state = form.cleaned_data['state']
-            data.city = form.cleaned_data['city']
-            data.order_note = form.cleaned_data['order_note']
-            data.order_total = grand_total
-            data.tax = tax
-            data.ip = request.META.get('REMOTE_ADDR')
-            data.save()
+        user = request.user
 
-            # Generate order number
-            current_date = datetime.date.today().strftime("%Y%m%d")
-            order_number = current_date + str(data.id)
-            data.order_number = order_number
-            data.save()
+        # Get cart items
+        cart_items = []
+        total = 0
+        quantity = 0
+        tax = 0
+        grand_total = 0
 
-            # Link order to the cart items (but don’t delete anything here)
-            for item in cart_items:
-                item.order = data
-                item.save()
+        buy_now_item_id = request.session.get('buy_now_item_id')
 
-            context = {
-                'order': data,
-                'cart_items': cart_items,
-                'total': total,
-                'tax': tax,
-                'grand_total': grand_total,
-                'is_buy_now': is_buy_now,
-                'buy_now_item': cart_items[0] if is_buy_now else None,
-            }
-            return render(request, 'orders/payments.html', context)
+        if buy_now_item_id:
+            cart_item = get_object_or_404(CartItem, id=buy_now_item_id, user=user)
+            cart_items = [cart_item]
+        else:
+            cart_items = CartItem.objects.filter(user=user)
+
+        # Check if cart is empty
+        if not cart_items:
+            messages.error(request, "Your cart is empty.")
+            return redirect('store')
+
+        for item in cart_items:
+            item_price = item.price if item.price else item.product.price
+            total += item_price * item.quantity
+            quantity += item.quantity
+
+        tax = (2 * total) / 100
+        grand_total = total + tax
+
+        # Check for selected address
+        selected_address_id = request.POST.get('address_id')
+
+        if selected_address_id:
+            try:
+                selected_address = UserAddress.objects.get(id=selected_address_id, user=user)
+                address = selected_address
+            except UserAddress.DoesNotExist:
+                messages.error(request, "Selected address not found.")
+                return redirect('checkout')
+        else:
+            # Get manual form data
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            full_name = f"{first_name} {last_name}".strip()
+            phone = request.POST.get('phone', '').strip()
+            address_line_1 = request.POST.get('address_line_1', '').strip()
+            address_line_2 = request.POST.get('address_line_2', '').strip()
+            city = request.POST.get('city', '').strip()
+            state = request.POST.get('state', '').strip()
+            country = request.POST.get('country', '').strip()
+            
+            if not all([full_name, phone, address_line_1, city, state, country]):
+                messages.error(request, "Please fill all required address fields or select a saved address.")
+                return redirect('checkout')
+
+            # Save this new address
+            address = UserAddress.objects.create(
+                user=user,
+                full_name=full_name,
+                phone=phone,
+                address_line_1=address_line_1,
+                address_line_2=address_line_2,
+                city=city,
+                state=state,
+                country=country,
+                postal_code=request.POST.get('postal_code', ''),
+            )
+
+        # Create the order
+        first_name = address.full_name.split()[0]
+        last_name = " ".join(address.full_name.split()[1:]) if len(address.full_name.split()) > 1 else ''
+        
+        order = Order.objects.create(
+            user=user,
+            first_name=first_name,
+            last_name=last_name,
+            phone=address.phone,
+            email=user.email,
+            address_line_1=address.address_line_1,
+            address_line_2=address.address_line_2,
+            city=address.city,
+            state=address.state,
+            country=address.country,
+            order_total=grand_total,
+            tax=tax,
+            ip=request.META.get('REMOTE_ADDR'),
+        )
+
+        # Generate order number
+        current_date = datetime.date.today().strftime("%Y%m%d")
+        order_number = current_date + str(order.id)
+        order.order_number = order_number
+        order.save()  # Don't set is_ordered=True here, it will be set when payment is confirmed
+        
+        # Create OrderProduct objects (but don't set ordered=True yet)
+        for item in cart_items:
+            if not OrderProduct.objects.filter(order=order, product=item.product, user=user).exists():
+                OrderProduct.objects.create(
+                    order=order,
+                    user=user,
+                    product=item.product,
+                    quantity=item.quantity,
+                    product_price=item.price if item.price else item.product.price,
+                    ordered=False,  # Will be set to True when payment is confirmed
+                )
+        
+        context = {
+            'order': order,
+            'cart_items': cart_items,
+            'total': total,
+            'tax': tax,
+            'grand_total': grand_total,
+            'is_buy_now': bool(buy_now_item_id),
+            'buy_now_item': cart_items[0] if buy_now_item_id else None,
+        }
+        
+        return render(request, 'orders/payments.html', context)
 
     return redirect('checkout')
 
+def edit_address(request, address_id):
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    
+    if request.method == 'POST':
+        # Update address with form data
+        address.full_name = request.POST.get('full_name')
+        address.phone = request.POST.get('phone')
+        address.address_line_1 = request.POST.get('address_line_1')
+        address.address_line_2 = request.POST.get('address_line_2', '')
+        address.city = request.POST.get('city')
+        address.state = request.POST.get('state')
+        address.country = request.POST.get('country')
+        address.postal_code = request.POST.get('postal_code', '')
+        
+        # Validate required fields
+        if not all([address.full_name, address.phone, address.address_line_1, 
+                   address.city, address.state, address.country]):
+            messages.error(request, "Please fill all required fields.")
+            return render(request, 'orders/edit_address.html', {'address': address})
+        
+        address.save()
+        messages.success(request, "Address updated successfully!")
+        return redirect('checkout')
+    
+    return render(request, 'orders/edit_address.html', {'address': address})
+
+def delete_address(request, address_id):
+    """View to delete an address"""
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    
+    if request.method == 'POST':
+        address.delete()
+        messages.success(request, "Address deleted successfully!")
+        return redirect('checkout')
+    
+    return render(request, 'orders/confirm_delete_address.html', {'address': address})
 
 
 
@@ -234,7 +330,7 @@ def order_complete(request):
 
         tax = round((2 * subtotal) / 100, 2)
         grand_total = round(subtotal + tax, 2)
-
+        
         context = {
             'order': order,
             'ordered_products': ordered_products,
@@ -245,6 +341,7 @@ def order_complete(request):
             'tax': tax,
             'grand_total': grand_total,
         }
+        print("This is order", ordered_products)
         return render(request, 'orders/order_complete.html', context)
 
     except (Order.DoesNotExist, Payment.DoesNotExist):

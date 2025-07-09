@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+<div class="container">
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">Confirm Delete Address</h4>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning">
+          <h6>Are you sure you want to delete this address?</h6>
+          <p class="mb-0">This action cannot be undone.</p>
+        </div>
+        
+        <div class="border p-3 mb-3 rounded">
+          <strong>{{ address.full_name }}</strong><br>
+          <span class="text-muted">{{ address.phone }}</span><br>
+          {{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}<br>
+          {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}
+        </div>
+        
+        <form method="POST">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Yes, Delete Address</button>
+          <a href="{% url 'checkout' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</section>
+
+{% endblock %}

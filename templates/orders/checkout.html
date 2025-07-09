@@ -3,168 +3,514 @@
 
 {% block content %}
 
-
 <section class="section-content padding-y bg">
 <div class="container">
 
-<!-- ============================ COMPONENT 1 ================================= -->
-
+<form action="{% url 'place_order' %}" method="POST">
+{% csrf_token %}
 <div class="row">
-	<aside class="col-lg-6">
-<div class="card">
-  <div class="card-body">
-    <h4 class="card-title mb-4">Billing Address</h4>
-    <form action="{% url 'place_order' %}" method="POST">
-      {% csrf_token %}
-      <div class="form-row">
-        <div class="col form-group">
-          <label for="">First Name</label>
-          <input type="text" name="first_name" class="form-control" required>
+  <aside class="col-lg-6">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="card-title">Select Delivery Address</h4>
+          <a href="{% url 'add_address' %}" class="btn btn-sm btn-success">+ Add New Address</a>
         </div>
-        <div class="col form-group">
-          <label for="">Last Name</label>
-          <input type="text" name="last_name" class="form-control" required>
+        <div id="address-cards">
+          {% for address in addresses %}
+            <div class="form-check address-card border p-3 mb-2 rounded {% if address.is_default %}selected-address border-primary{% endif %}">
+              <input class="form-check-input address-radio" type="radio" name="address_id" value="{{ address.id }}"
+                     id="address{{ forloop.counter }}" {% if address.is_default %}checked{% endif %}>
+              <label class="form-check-label d-block" for="address{{ forloop.counter }}">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="address-content">
+                    <strong>{{ address.full_name }}</strong>
+                    {% if address.is_default %}
+                      <span class="badge badge-primary ms-2">Default</span>
+                    {% endif %}
+                    <br>
+                    <span class="text-muted">{{ address.phone }}</span><br>
+                    <span class="address-text">{{ address.address_line_1 }}{% if address.address_line_2 %}, {{ address.address_line_2 }}{% endif %}<br>
+                    {{ address.city }}, {{ address.state }}, {{ address.country }} - {{ address.postal_code }}</span>
+                  </div>
+                  <div class="address-actions">
+                    <div class="mb-2">
+                      <label class="form-check-label d-flex align-items-center" style="font-size: 0.85rem;">
+                        <input type="radio" name="default_address" value="{{ address.id }}" 
+                               class="form-check-input me-1 default-radio" 
+                               {% if address.is_default %}checked{% endif %}>
+                        <span class="default-text">
+                          {% if address.is_default %}
+                            Default
+                          {% else %}
+                            Set as Default
+                          {% endif %}
+                        </span>
+                      </label>
+                    </div>
+                    <div>
+                      <a href="{% url 'edit_address' address.id %}" class="btn btn-sm btn-outline-primary me-1" title="Edit Address">
+                        <i class="fa fa-edit"></i>
+                      </a>
+                      <a href="{% url 'delete_address' address.id %}" class="btn btn-sm btn-outline-danger" title="Delete Address" 
+                         onclick="return confirm('Are you sure you want to delete this address?')">
+                        <i class="fa fa-trash"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          {% empty %}
+            <div class="text-center py-4">
+              <p class="text-muted">No saved addresses found.</p>
+              <a href="{% url 'add_address' %}" class="btn btn-primary">Add Your First Address</a>
+            </div>
+          {% endfor %}
         </div>
       </div>
-      <div class="form-row">
-        <div class="col form-group">
-          <label for="">Email</label>
-          <input type="email" name="email" class="form-control" required>
-        </div>
-        <div class="col form-group">
-          <label for="">Phone Number</label>
-          <input type="text" name="phone" class="form-control" required>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="col form-group">
-          <label for="">Address Line 1</label>
-          <input type="text" name="address_line_1" class="form-control" required>
-        </div>
-        <div class="col form-group">
-          <label for="">Address Line 2</label>
-          <input type="text" name="address_line_2" class="form-control">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="col form-group">
-          <label for="">City</label>
-          <input type="text" name="city" class="form-control" required>
-        </div>
-        <div class="col form-group">
-          <label for="">State</label>
-          <input type="text" name="state" class="form-control" required>
-        </div>
-        <div class="col form-group">
-          <label for="">Country</label>
-          <input type="text" name="country" class="form-control" required>
-        </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="mb-3">Or Enter New Address</h5>
+        <div class="form-row">
+          <div class="col form-group">
+            <label>First Name</label>
+            <input type="text" name="first_name" class="form-control">
+          </div>
+          <div class="col form-group">
+            <label>Last Name</label>
+            <input type="text" name="last_name" class="form-control">
+          </div>
         </div>
         <div class="form-row">
-          <label for="">Order Note</label>
+          <div class="col form-group">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control">
+          </div>
+          <div class="col form-group">
+            <label>Phone Number</label>
+            <input type="text" name="phone" class="form-control">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="col form-group">
+            <label>Address Line 1</label>
+            <input type="text" name="address_line_1" class="form-control">
+          </div>
+          <div class="col form-group">
+            <label>Address Line 2</label>
+            <input type="text" name="address_line_2" class="form-control">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="col form-group">
+            <label>City</label>
+            <input type="text" name="city" class="form-control">
+          </div>
+          <div class="col form-group">
+            <label>State</label>
+            <input type="text" name="state" class="form-control">
+          </div>
+          <div class="col form-group">
+            <label>Country</label>
+            <input type="text" name="country" class="form-control">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="col form-group">
+            <label>Postal Code</label>
+            <input type="text" name="postal_code" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Order Note</label>
           <textarea name="order_note" rows="2" class="form-control"></textarea>
         </div>
+      </div>
+    </div>
+  </aside>
 
-
-  </div>
-</div> <!-- card.// -->
-
-	</aside> <!-- col.// -->
-	<aside class="col-lg-6">
-
-		<div class="card">
-		<div class="card-body">
-      <table class="table table-borderless table-shopping-cart">
-      <thead class="text-muted">
-      <tr class="small text-uppercase">
-        <th scope="col">Product</th>
-        <th scope="col" width="120">Quantity</th>
-        <th scope="col" width="120">Price</th>
-
-      </tr>
-      </thead>
-      <tbody>
-
-      {% if is_buy_now %}
-<tr>
-    <td>
-        <figure class="itemside align-items-center">
-            <div class="aside">
-                <img src="{{ buy_now_item.product.images.url }}" class="img-sm">
-            </div>
-            <figcaption class="info">
-                <a href="{{ buy_now_item.product.get_url }}" class="title text-dark">
-                    {{ buy_now_item.product.product_name }}
-                </a>
-                <p class="text-muted small">
-                    {% for var in buy_now_item.variations %}
-                        {{ var.variation_category|capfirst }} : {{ var.variation_value|capfirst }} <br>
-                    {% endfor %}
-                </p>
-            </figcaption>
-        </figure>
-    </td>
-    <td>{{ buy_now_item.quantity }}</td>
-    <td>
-        <div class="price-wrap">
-            <var class="price">₹ {{ buy_now_item.sub_total }}</var>
-            <small class="text-muted"> ₹ {{ buy_now_item.price }} each </small>
-        </div>
-    </td>
-</tr>
-{% else %}
-{% for cart_item in cart_items %}
-<tr>
-    <td>
-        <figure class="itemside align-items-center">
-            <div class="aside">
-                <img src="{{ cart_item.product.images.url }}" class="img-sm">
-            </div>
-            <figcaption class="info">
-                <a href="{{ cart_item.product.get_url }}" class="title text-dark">
-                    {{ cart_item.product.product_name }}
-                </a>
-                <p class="text-muted small">
-                    {% if cart_item.variations.all %}
-                        {% for item in cart_item.variations.all %}
-                            {{ item.variation_category | capfirst }} : {{ item.variation_value | capfirst }} <br>
+  <aside class="col-lg-6">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="mb-3">Your Order</h4>
+        <table class="table table-borderless table-shopping-cart">
+          <thead class="text-muted">
+            <tr class="small text-uppercase">
+              <th scope="col">Product</th>
+              <th scope="col" width="120">Quantity</th>
+              <th scope="col" width="120">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if is_buy_now %}
+              <tr>
+                <td>
+                  <figure class="itemside align-items-center">
+                    <div class="aside">
+                      <img src="{{ buy_now_item.product.images.url }}" class="img-sm">
+                    </div>
+                    <figcaption class="info">
+                      <a href="{{ buy_now_item.product.get_url }}" class="title text-dark">
+                        {{ buy_now_item.product.product_name }}
+                      </a>
+                      <p class="text-muted small">
+                        {% for var in buy_now_item.variations %}
+                          {{ var.variation_category|capfirst }} : {{ var.variation_value|capfirst }} <br>
                         {% endfor %}
-                    {% endif %}
-                </p>
-            </figcaption>
-        </figure>
-    </td>
-    <td>{{ cart_item.quantity }}</td>
-    <td>
-        <div class="price-wrap">
-            <var class="price">₹ {{ cart_item.sub_total }}</var>
-            <small class="text-muted"> ₹ {{ cart_item.price }} each </small>
+                      </p>
+                    </figcaption>
+                  </figure>
+                </td>
+                <td>{{ buy_now_item.quantity }}</td>
+                <td>
+                  <div class="price-wrap">
+                    <var class="price">₹ {{ buy_now_item.sub_total }}</var>
+                    <small class="text-muted"> ₹ {{ buy_now_item.price }} each </small>
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              {% for cart_item in cart_items %}
+                <tr>
+                  <td>
+                    <figure class="itemside align-items-center">
+                      <div class="aside">
+                        <img src="{{ cart_item.product.images.url }}" class="img-sm">
+                      </div>
+                      <figcaption class="info">
+                        <a href="{{ cart_item.product.get_url }}" class="title text-dark">
+                          {{ cart_item.product.product_name }}
+                        </a>
+                        <p class="text-muted small">
+                          {% for var in cart_item.variations.all %}
+                            {{ var.variation_category|capfirst }} : {{ var.variation_value|capfirst }} <br>
+                          {% endfor %}
+                        </p>
+                      </figcaption>
+                    </figure>
+                  </td>
+                  <td>{{ cart_item.quantity }}</td>
+                  <td>
+                    <div class="price-wrap">
+                      <var class="price">₹ {{ cart_item.sub_total }}</var>
+                      <small class="text-muted"> ₹ {{ cart_item.price }} each </small>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+        
+        <div class="order-summary mt-4">
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span>Subtotal:</span>
+            <span>₹ {{ total }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Tax:</span>
+            <span>₹ {{ tax }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Shipping:</span>
+            <span>₹ {{ shipping }}</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between font-weight-bold">
+            <span>Total:</span>
+            <span>₹ {{ grand_total }}</span>
+          </div>
         </div>
-    </td>
-</tr>
-{% endfor %}
-{% endif %}
 
+        <button type="submit" name="submit" class="btn btn-primary btn-block mt-4">
+          <i class="fas fa-shopping-cart"></i> Place Order
+        </button>
+        <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+      </div>
+    </div>
+  </aside>
+</div>
+</form>
 
-      </tbody>
-      </table>
-
-      <button type="submit" name="submit" class="btn btn-primary btn-block">Place Order</button>
-			<a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
-      </form>
-		</div> <!-- card-body.// -->
-		</div> <!-- card.// -->
-
-
-</aside> <!-- col.// -->
-
-
-</div> <!-- row.// -->
-
-<!-- ============================ COMPONENT 1 END .// ================================= -->
-
-</div> <!-- container .//  -->
+</div>
 </section>
-<!-- ========================= SECTION CONTENT END// ========================= -->
+
+<!-- Add CSRF token as a meta tag for JavaScript access -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Handle address selection
+  document.querySelectorAll('.address-radio').forEach(radio => {
+    radio.addEventListener('change', function() {
+      // Remove selected styling from all cards
+      document.querySelectorAll('.address-card').forEach(card => {
+        card.classList.remove('selected-address', 'border-primary');
+      });
+      
+      // Add selected styling to current card
+      if (this.checked) {
+        this.closest('.address-card').classList.add('selected-address', 'border-primary');
+      }
+    });
+  });
+
+  // Handle default address change
+  document.querySelectorAll('input[name="default_address"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const addressId = this.value;
+      const radioButton = this;
+      const textSpan = radioButton.parentNode.querySelector('.default-text');
+      const originalText = textSpan.textContent;
+
+      // Update UI immediately for better UX
+      textSpan.textContent = 'Setting...';
+      radioButton.disabled = true;
+
+      const csrfToken = getCSRFToken();
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        textSpan.textContent = originalText;
+        radioButton.disabled = false;
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('address_id', addressId);
+
+      fetch('{% url "set_default_address" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          updateDefaultAddressUI(addressId);
+        } else {
+          throw new Error(data.error || 'Failed to set default address');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        textSpan.textContent = originalText;
+        radioButton.disabled = false;
+        // Reset the radio button
+        radioButton.checked = false;
+        // Find and check the actual default address
+        document.querySelectorAll('input[name="default_address"]').forEach(r => {
+          if (r.parentNode.querySelector('.default-text').textContent.includes('Default')) {
+            r.checked = true;
+          }
+        });
+      });
+    });
+  });
+
+  function updateDefaultAddressUI(newDefaultAddressId) {
+    document.querySelectorAll('.address-card').forEach(card => {
+      const radioButton = card.querySelector('input[name="default_address"]');
+      const textSpan = radioButton.parentNode.querySelector('.default-text');
+      const badge = card.querySelector('.badge');
+      const addressRadio = card.querySelector('.address-radio');
+
+      // Remove old badge
+      if (badge) {
+        badge.remove();
+      }
+
+      // Reset all cards
+      card.classList.remove('selected-address', 'border-primary');
+      radioButton.disabled = false;
+
+      if (radioButton.value === newDefaultAddressId) {
+        // This is the new default address
+        radioButton.checked = true;
+        textSpan.textContent = 'Default';
+        
+        // Add default badge
+        const nameElement = card.querySelector('strong');
+        const newBadge = document.createElement('span');
+        newBadge.className = 'badge badge-primary ms-2';
+        newBadge.textContent = 'Default';
+        nameElement.appendChild(newBadge);
+
+        // Select this address for delivery
+        addressRadio.checked = true;
+        card.classList.add('selected-address', 'border-primary');
+      } else {
+        // This is not the default address
+        radioButton.checked = false;
+        textSpan.textContent = 'Set as Default';
+      }
+    });
+  }
+
+  function getCSRFToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) {
+      return meta.getAttribute('content');
+    }
+    return getCookie('csrftoken');
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Form validation before submission
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const selectedAddress = document.querySelector('input[name="address_id"]:checked');
+    const newAddressFields = document.querySelectorAll('input[name="first_name"], input[name="last_name"], input[name="address_line_1"], input[name="city"], input[name="state"], input[name="country"], input[name="postal_code"]');
+    
+    let hasNewAddress = false;
+    newAddressFields.forEach(field => {
+      if (field.value.trim()) {
+        hasNewAddress = true;
+      }
+    });
+
+    if (!selectedAddress && !hasNewAddress) {
+      e.preventDefault();
+      alert('Please select a delivery address or enter a new one.');
+      return false;
+    }
+
+    if (hasNewAddress) {
+      // Validate required fields for new address
+      let isValid = true;
+      const requiredFields = ['first_name', 'last_name', 'address_line_1', 'city', 'state', 'country', 'postal_code'];
+      
+      requiredFields.forEach(fieldName => {
+        const field = document.querySelector(`input[name="${fieldName}"]`);
+        if (!field.value.trim()) {
+          field.classList.add('is-invalid');
+          isValid = false;
+        } else {
+          field.classList.remove('is-invalid');
+        }
+      });
+
+      if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields for the new address.');
+        return false;
+      }
+    }
+  });
+});
+</script>
+
+<style>
+.selected-address {
+  background-color: #f0f9ff !important;
+  border-color: #007bff !important;
+}
+
+.address-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.address-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.address-actions {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.address-card:hover .address-actions {
+  opacity: 1;
+}
+
+.address-card .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.address-content {
+  flex: 1;
+  padding-right: 10px;
+}
+
+.address-actions a {
+  text-decoration: none;
+}
+
+.default-radio {
+  transform: scale(0.9);
+}
+
+.badge {
+  font-size: 0.7rem;
+}
+
+.address-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.form-check-label {
+  cursor: pointer;
+  width: 100%;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.order-summary {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.font-weight-bold {
+  font-weight: bold !important;
+}
+
+/* Loading state */
+.address-card.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .address-actions {
+    opacity: 1;
+  }
+  
+  .address-actions .btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+  }
+}
+</style>
 
 {% endblock %}

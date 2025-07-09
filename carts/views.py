@@ -4,6 +4,7 @@ from .models import Cart, CartItem
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
+from accounts.models import UserAddress
 
 # Create your views here.
 from django.http import HttpResponse
@@ -224,6 +225,8 @@ def checkout(request):
 
     tax = (2 * total) / 100
     grand_total = total + tax
+    
+    addresses = UserAddress.objects.filter(user=current_user)
 
     context = {
         'cart_items': cart_items,
@@ -231,5 +234,6 @@ def checkout(request):
         'quantity': quantity,
         'tax': tax,
         'grand_total': grand_total,
+        'addresses': addresses,
     }
     return render(request, 'orders/checkout.html', context)

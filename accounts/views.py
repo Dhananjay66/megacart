@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import RegistrationForm, UserForm, UserProfileForm
+from .forms import RegistrationForm, UserForm, UserProfileForm, UserAddressForm
 from .models import Account, UserProfile
 from orders.models import Order, OrderProduct
+from accounts.models import UserAddress
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import JsonResponse
+from django.urls import reverse
 
 # Verification email
 from django.contrib.sites.shortcuts import get_current_site
@@ -16,7 +18,7 @@ from django.core.mail import EmailMessage
 
 from django.utils.crypto import get_random_string
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.contrib import messages
 
 from .forms import CompleteProfileForm
@@ -29,11 +31,14 @@ from django.contrib.auth import login, get_backends
 from django.conf import settings
 from django.utils import timezone
 
-from django.contrib.auth import authenticate, login as auth_login
 from carts.models import Cart, CartItem
 from carts.views import _cart_id
 import requests
 
+from django.views.decorators.csrf import csrf_exempt
+from .models import UserAddress
+import json
+from django.views.decorators.http import require_http_methods
 
 
 def register(request):
@@ -476,3 +481,266 @@ def complete_profile(request):
     else:
         form = CompleteProfileForm(instance=request.user)
     return render(request, 'accounts/complete_profile.html', {'form': form})
+
+
+@login_required
+def my_addresses(request):
+    addresses = UserAddress.objects.filter(user=request.user)
+    return render(request, 'accounts/my_addresses.html', {'addresses': addresses})
+
+
+@login_required
+def add_address(request):
+    if request.method == 'POST':
+        # Check if it's an AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            try:
+                # Handle JSON data
+                if request.content_type == 'application/json':
+                    data = json.loads(request.body)
+                else:
+                    # Handle form data
+                    data = request.POST
+                
+                # Validate required fields
+                required_fields = ['full_name', 'phone', 'address_line_1', 'city', 'state', 'country']
+                errors = {}
+                
+                for field in required_fields:
+                    if not data.get(field):
+                        errors[field] = [f'{field.replace("_", " ").title()} is required']
+                
+                # Additional validation
+                if data.get('phone') and len(data.get('phone')) != 10:
+                    errors['phone'] = ['Please enter a valid 10-digit phone number']
+                
+                if data.get('postal_code') and len(data.get('postal_code')) != 6:
+                    errors['postal_code'] = ['Please enter a valid 6-digit postal code']
+                
+                if errors:
+                    return JsonResponse({
+                        'success': False,
+                        'errors': errors,
+                        'message': 'Please fix the errors below'
+                    }, status=400)
+                
+                # Create address
+                address = UserAddress.objects.create(
+                    user=request.user,
+                    full_name=data.get('full_name'),
+                    phone=data.get('phone'),
+                    address_line_1=data.get('address_line_1'),
+                    address_line_2=data.get('address_line_2', ''),
+                    city=data.get('city'),
+                    state=data.get('state'),
+                    country=data.get('country'),
+                    postal_code=data.get('postal_code', ''),
+                    is_default=data.get('is_default', False)
+                )
+                
+                # If this is set as default, remove default from other addresses
+                if address.is_default:
+                    UserAddress.objects.filter(user=request.user).exclude(id=address.id).update(is_default=False)
+                
+                # If this is the first address, make it default
+                if not address.is_default and UserAddress.objects.filter(user=request.user).count() == 1:
+                    address.is_default = True
+                    address.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Address saved successfully!',
+                    'address': {
+                        'id': address.id,
+                        'full_name': address.full_name,
+                        'phone': address.phone,
+                        'address_line_1': address.address_line_1,
+                        'address_line_2': address.address_line_2,
+                        'city': address.city,
+                        'state': address.state,
+                        'country': address.country,
+                        'postal_code': address.postal_code,
+                        'is_default': address.is_default
+                    }
+                })
+                
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid JSON data'
+                }, status=400)
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'An error occurred while saving the address'
+                }, status=500)
+        else:
+            # Handle regular form submission
+            form = UserAddressForm(request.POST)
+            if form.is_valid():
+                address = form.save(commit=False)
+                address.user = request.user
+                if not UserAddress.objects.filter(user=request.user).exists():
+                    address.is_default = True
+                address.save()
+                messages.success(request, 'Address saved successfully!')
+                return redirect('checkout')
+            else:
+                messages.error(request, 'Please fix the errors below.')
+    else:
+        form = UserAddressForm()
+    
+    return render(request, 'accounts/add_address.html', {'form': form})
+
+
+@login_required
+def edit_address(request, id):
+    address = get_object_or_404(UserAddress, id=id, user=request.user)
+    
+    if request.method == 'POST':
+        # Check if it's an AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                data = request.POST
+                
+                # Validate required fields
+                required_fields = ['full_name', 'phone', 'address_line_1', 'city', 'state', 'country']
+                errors = {}
+                
+                for field in required_fields:
+                    if not data.get(field):
+                        errors[field] = [f'{field.replace("_", " ").title()} is required']
+                
+                if errors:
+                    return JsonResponse({
+                        'success': False,
+                        'errors': errors,
+                        'message': 'Please fix the errors below'
+                    }, status=400)
+                
+                # Update address
+                address.full_name = data.get('full_name')
+                address.phone = data.get('phone')
+                address.address_line_1 = data.get('address_line_1')
+                address.address_line_2 = data.get('address_line_2', '')
+                address.city = data.get('city')
+                address.state = data.get('state')
+                address.country = data.get('country')
+                address.postal_code = data.get('postal_code', '')
+                
+                # Handle default status
+                if data.get('is_default'):
+                    UserAddress.objects.filter(user=request.user).update(is_default=False)
+                    address.is_default = True
+                
+                address.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Address updated successfully!',
+                    'redirect_url': '/my-addresses/'  # Change this to your actual URL
+                })
+                
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'An error occurred while updating the address'
+                }, status=500)
+        else:
+            # Handle regular form submission
+            form = UserAddressForm(request.POST, instance=address)
+            if form.is_valid():
+                updated = form.save(commit=False)
+                if updated.is_default:
+                    UserAddress.objects.filter(user=request.user).update(is_default=False)
+                updated.save()
+                messages.success(request, 'Address updated successfully.')
+                return redirect('my_addresses')
+            else:
+                messages.error(request, 'Please fix the errors below.')
+    else:
+        form = UserAddressForm(instance=address)
+    
+    return render(request, 'accounts/address_form.html', {'form': form})
+
+
+@login_required
+def delete_address(request, id):
+    address = get_object_or_404(UserAddress, id=id, user=request.user)
+    
+    if request.method == 'POST':
+        address.delete()
+        messages.success(request, 'Address deleted successfully.')
+        return redirect('my_addresses')
+    
+    return render(request, 'accounts/confirm_delete.html', {'address': address})
+
+
+# @csrf_exempt
+# @login_required
+# @require_http_methods(["POST"])
+# def set_default_address(request):
+#     try:
+#         # Parse JSON data from request body
+#         data = json.loads(request.body)
+#         address_id = data.get('address_id')
+        
+#         if not address_id:
+#             return JsonResponse({
+#                 'success': False, 
+#                 'message': 'Address ID is required'
+#             }, status=400)
+        
+#         # Get the address and verify it belongs to the current user
+#         address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+        
+#         # Remove default status from all user's addresses
+#         UserAddress.objects.filter(user=request.user).update(is_default=False)
+        
+#         # Set the selected address as default
+#         address.is_default = True
+#         address.save()
+        
+#         return JsonResponse({
+#             'success': True,
+#             'message': 'Default address updated successfully',
+#             'address_id': address_id
+#         })
+        
+#     except json.JSONDecodeError:
+#         return JsonResponse({
+#             'success': False,
+#             'message': 'Invalid JSON data'
+#         }, status=400)
+        
+#     except Exception as e:
+#         return JsonResponse({
+#             'success': False,
+#             'message': 'An error occurred while updating the default address'
+#         }, status=500)
+
+
+@login_required
+def set_default_address(request):
+    if request.method == 'POST':
+        address_id = request.POST.get('address_id')
+        try:
+            # Remove default from all addresses
+            UserAddress.objects.filter(user=request.user).update(is_default=False)
+            
+            # Set new default
+            address = UserAddress.objects.get(id=address_id, user=request.user)
+            address.is_default = True
+            address.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Default address updated successfully!'
+            })
+        except UserAddress.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Address not found'
+            }, status=404)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)

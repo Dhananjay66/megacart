@@ -1,5 +1,5 @@
 from django import forms
-from .models import Account, UserProfile
+from .models import Account, UserProfile, UserAddress
 
 
 class RegistrationForm(forms.ModelForm):
@@ -70,3 +70,12 @@ class ContactForm(forms.Form):
 
 class OTPForm(forms.Form):
     otp = forms.CharField(label="Enter OTP")
+
+
+class UserAddressForm(forms.ModelForm):
+    class Meta:
+        model = UserAddress
+        fields = ['full_name', 'phone', 'address_line_1', 'address_line_2', 'city', 'state', 'country', 'postal_code']
+        widgets = {
+            'is_default': forms.CheckboxInput(),
+        }
