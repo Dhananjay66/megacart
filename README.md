@@ -21,7 +21,7 @@
 
 ## 🌍 Live Demo
 
-> 🔗 **Live Demo**: [Click Here](https://megacart-1-o5eo.onrender.com)
+> 🔗 **Live Demo**: [Click Here](https://megacart-3cmg.onrender.com/)
 
 ---
 
@@ -48,7 +48,7 @@ MegaCart/
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-username/megacart.git
+   git clone https://github.com/Dhananjay66/megacart.git
    cd megacart
    ```
 
