@@ -7,7 +7,6 @@ from django.contrib.auth.views import redirect_to_login
 from accounts.models import UserAddress
 
 # Create your views here.
-from django.http import HttpResponse
 
 def _cart_id(request):
     cart = request.session.session_key

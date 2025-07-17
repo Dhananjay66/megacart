@@ -1,73 +1,381 @@
 {% load static %}
 
 <header class="section-header">
-
-
 <section class="header-main border-bottom">
-  <div class="container">
-<div class="row align-items-center">
-  <div class="col-lg-2 col-md-3 col-6">
-    <a href="{% url 'home' %}" class="brand-wrap">
-      <img class="logo" src="{% static './images/logo.png' %}">
-    </a> <!-- brand-wrap.// -->
-  </div>
-  <div class="col-lg col-sm col-md col-6 flex-grow-0">
-    <div class="category-wrap dropdown d-inline-block float-right">
-      <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-        <i class="fa fa-bars"></i> All category
-      </button>
-      <div class="dropdown-menu">
-        <a class="dropdown-item" href="{% url 'store' %}">All Products </a>
-        {% for category in links %}
-          <a class="dropdown-item" href="{{ category.get_url }}">{{ category.category_name }} </a>
-        {% endfor %}
+  <div class="container-fluid">
+    <div class="row align-items-center">
+      
+      <!-- Logo - Left side -->
+      <div class="col-3 col-sm-2 col-md-2 col-lg-2">
+        <a href="{% url 'home' %}" class="brand-wrap">
+          <img class="logo img-fluid" src="{% static './images/logo.png' %}" alt="Logo">
+        </a>
       </div>
-    </div>  <!-- category-wrap.// -->
-  </div> <!-- col.// -->
-  <a href="{% url 'store' %}" class="btn btn-outline-primary">Store</a>
-  <div class="col-lg  col-md-6 col-sm-12 col">
-    <form action="{% url 'search' %}" class="search" method='GET'>
-      <div class="input-group w-100">
-          <input type="text" class="form-control" style="width:60%;" placeholder="Search" name="keyword">
-
-          <div class="input-group-append">
-            <button class="btn btn-primary" type="submit">
-              <i class="fa fa-search"></i>
-            </button>
+      
+      <!-- Search Bar - Center (hidden on mobile and tablet) -->
+      <div class="col-lg-5 d-none d-lg-block">
+        <form action="{% url 'search' %}" class="search" method='GET'>
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Search products..." name="keyword">
+            <div class="input-group-append">
+              <button class="btn btn-primary" type="submit">
+                <i class="fa fa-search"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Desktop Navigation - Right side (hidden on mobile) -->
+      <div class="col-lg-5 col-md-8 d-none d-md-flex justify-content-end align-items-center">
+        <!-- Category Dropdown -->
+        <div class="dropdown me-3">
+          <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-bars"></i> Categories
+          </button>
+          <div class="dropdown-menu">
+            {% for category in links %}
+              <a class="dropdown-item" href="{{ category.get_url }}">{{ category.category_name }}</a>
+            {% endfor %}
           </div>
         </div>
-    </form> <!-- search-wrap .end// -->
-  </div> <!-- col.// -->
-  <div class="col-lg-3 col-sm-6 col-8 order-2 order-lg-3">
-        <div class="d-flex justify-content-end mb-3 mb-lg-0">
+        
+        <!-- Store Link -->
+        <a href="{% url 'store' %}" class="btn btn-outline-primary me-3">Store</a>
+        
+        <!-- User Info -->
+        <div class="user-info me-3">
           {% if user.id is None %}
-          <div class="widget-header">
-            <small class="title text-muted">Welcome guest!</small>
-            <div>
-              <a href="{% url 'login' %}">Sign in</a> <span class="dark-transp"> | </span>
-              <a href="{% url 'register' %}"> Register</a>
+            <div class="widget-header">
+              <small class="title text-muted d-none d-lg-block">Welcome guest!</small>
+              <div>
+                <a href="{% url 'login' %}" class="text-decoration-none">Sign in</a>
+                <span class="dark-transp d-none d-lg-inline"> | </span>
+                <a href="{% url 'register' %}" class="text-decoration-none d-none d-lg-inline">Register</a>
+              </div>
             </div>
-          </div>
           {% else %}
-          <div class="widget-header">
-            <small class="title text-muted">Welcome {{user.first_name}}!</small>
-            <div>
-              <a href="{% url 'dashboard' %}">Dashboard</a> <span class="dark-transp"> | </span>
-              <a href="{% url 'logout' %}"> Logout</a>
+            <div class="widget-header">
+              <small class="title text-muted d-none d-lg-block">Welcome {{user.first_name}}!</small>
+              <div>
+                <a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a>
+                <span class="dark-transp d-none d-lg-inline"> | </span>
+                <a href="{% url 'logout' %}" class="text-decoration-none d-none d-lg-inline">Logout</a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+        
+        <!-- Cart -->
+        <a href="{% url 'cart' %}" class="cart-link position-relative">
+          <div class="icon icon-sm rounded-circle border d-flex align-items-center justify-content-center">
+            <i class="fa fa-shopping-cart"></i>
+          </div>
+          <span class="cart-badge">{{cart_count}}</span>
+        </a>
+      </div>
+      
+      <!-- Mobile Navigation - Right side (visible only on mobile) -->
+      <div class="col-9 col-sm-10 d-md-none">
+        <div class="d-flex justify-content-end align-items-center">
+          
+          <!-- Mobile Search Button -->
+          <button class="btn btn-link mobile-search-btn me-2" type="button" data-toggle="collapse" data-target="#mobileSearch">
+            <i class="fa fa-search"></i>
+          </button>
+          
+          <!-- Login Button -->
+          {% if user.id is None %}
+            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm me-2">Login</a>
+          {% else %}
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-sm me-2">{{user.first_name}}</a>
+          {% endif %}
+          
+          <!-- Cart -->
+          <a href="{% url 'cart' %}" class="cart-link position-relative me-2">
+            <div class="icon icon-sm rounded-circle border d-flex align-items-center justify-content-center">
+              <i class="fa fa-shopping-cart"></i>
+            </div>
+            <span class="cart-badge">{{cart_count}}</span>
+          </a>
+          
+          <!-- Mobile Menu Button -->
+          <button class="btn btn-link mobile-menu-btn" type="button" data-toggle="collapse" data-target="#mobileMenu">
+            <i class="fa fa-bars"></i>
+          </button>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- Mobile Search Bar (collapsible) -->
+    <div class="row d-md-none">
+      <div class="col-12">
+        <div class="collapse" id="mobileSearch">
+          <div class="mobile-search-container py-3">
+            <form action="{% url 'search' %}" class="search" method='GET'>
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search products..." name="keyword">
+                <div class="input-group-append">
+                  <button class="btn btn-primary" type="submit">
+                    <i class="fa fa-search"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mobile Menu (collapsible) -->
+    <div class="row d-md-none">
+      <div class="col-12">
+        <div class="collapse" id="mobileMenu">
+          <div class="mobile-menu-container py-3 border-top">
+            <div class="list-group list-group-flush">
+              <a href="{% url 'store' %}" class="list-group-item list-group-item-action">
+                <i class="fa fa-store me-2"></i> Store
+              </a>
+              <a href="{% url 'store' %}" class="list-group-item list-group-item-action">
+                <i class="fa fa-th-large me-2"></i> All Products
+              </a>
+              {% for category in links %}
+                <a href="{{ category.get_url }}" class="list-group-item list-group-item-action">
+                  <i class="fa fa-tag me-2"></i> {{ category.category_name }}
+                </a>
+              {% endfor %}
+              
+              {% if user.id is None %}
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between">
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-sm">Sign In</a>
+                    <a href="{% url 'register' %}" class="btn btn-outline-primary btn-sm">Register</a>
+                  </div>
+                </div>
+              {% else %}
+                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action">
+                  <i class="fa fa-user me-2"></i> Dashboard
+                </a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action">
+                  <i class="fa fa-sign-out-alt me-2"></i> Logout
+                </a>
+              {% endif %}
             </div>
           </div>
-          {% endif %}
-          <a href="{% url 'cart' %}" class="widget-header pl-3 ml-3">
-            <div class="icon icon-sm rounded-circle border"><i class="fa fa-shopping-cart"></i></div>
-            <span class="badge badge-pill badge-danger notify">{{cart_count}}</span>
-          </a>
-        </div> <!-- widgets-wrap.// -->
-      </div> <!-- col.// -->
-</div> <!-- row.// -->
-  </div> <!-- container.// -->
-</section> <!-- header-main .// -->
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</section>
+</header>
 
+<style>
+/* General Styles */
+.section-header {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
+.logo {
+  max-height: 40px;
+  width: auto;
+}
 
+/* Cart Icon Styles */
+.cart-link {
+  text-decoration: none;
+  color: inherit;
+}
 
-</header> <!-- section-header.// -->
+.cart-link .icon {
+  width: 35px;
+  height: 35px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+/* Improved Cart Badge */
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 2px solid white;
+}
+
+/* Mobile Specific Styles */
+.mobile-search-btn, .mobile-menu-btn {
+  color: #333;
+  font-size: 18px;
+  padding: 8px;
+}
+
+.mobile-search-btn:hover, .mobile-menu-btn:hover {
+  color: #007bff;
+}
+
+.mobile-search-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.mobile-menu-container {
+  background-color: #f8f9fa;
+}
+
+.list-group-item {
+  border: none;
+  background-color: transparent;
+  padding: 12px 15px;
+}
+
+.list-group-item:hover {
+  background-color: #e9ecef;
+}
+
+.list-group-item i {
+  width: 20px;
+  color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .container-fluid {
+    padding: 0 10px;
+  }
+  
+  .header-main {
+    padding: 10px 0;
+  }
+  
+  .logo {
+    max-height: 35px;
+  }
+  
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .cart-link .icon {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .cart-badge {
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .logo {
+    max-height: 30px;
+  }
+  
+  .mobile-search-btn, .mobile-menu-btn {
+    font-size: 16px;
+    padding: 6px;
+  }
+  
+  .cart-badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 9px;
+  }
+}
+
+/* Desktop specific styles */
+@media (min-width: 768px) {
+  .user-info {
+    text-align: right;
+  }
+  
+  .widget-header {
+    min-width: 120px;
+  }
+  
+  .widget-header small {
+    display: block;
+    margin-bottom: 2px;
+  }
+}
+
+/* Improved laptop/tablet breakpoints */
+@media (min-width: 768px) and (max-width: 991px) {
+  .widget-header small {
+    display: none !important;
+  }
+  
+  .widget-header a {
+    font-size: 14px;
+  }
+  
+  .btn {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+  
+  .dropdown-toggle {
+    padding: 6px 10px;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+  .me-3 {
+    margin-right: 0.75rem !important;
+  }
+}
+
+/* Utility classes for spacing */
+.me-2 { margin-right: 0.5rem !important; }
+.me-3 { margin-right: 1rem !important; }
+</style>
+
+<!-- Add this JavaScript for mobile menu functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Mobile search toggle
+  const searchBtn = document.querySelector('.mobile-search-btn');
+  const searchCollapse = document.getElementById('mobileSearch');
+  const menuCollapse = document.getElementById('mobileMenu');
+  
+  if (searchBtn) {
+    searchBtn.addEventListener('click', function() {
+      // Close menu if open
+      if (menuCollapse && menuCollapse.classList.contains('show')) {
+        $(menuCollapse).collapse('hide');
+      }
+    });
+  }
+  
+  // Mobile menu toggle
+  const menuBtn = document.querySelector('.mobile-menu-btn');
+  
+  if (menuBtn) {
+    menuBtn.addEventListener('click', function() {
+      // Close search if open
+      if (searchCollapse && searchCollapse.classList.contains('show')) {
+        $(searchCollapse).collapse('hide');
+      }
+    });
+  }
+});
+</script>

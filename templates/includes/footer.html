@@ -1,34 +1,379 @@
 <!-- ========================= FOOTER ========================= -->
-<footer class="section-footer border-top">
-	<div class="container">
-		<section class="footer-bottom border-top row">
-			<div class="col-md-2">
-				{% comment %} <p class="text-muted"> &copy 2025 Made by <i class="fa fa-solid fa-heart" style="color: #ff0000;"></i> and Jay	</p> {% endcomment %}
-				<p class="text-muted"> &copy 2025 Made by Jay	</p>
-			</div>
-			<div class="col-md-8 text-md-center">
-				<span  class="px-2">pratapsinghd665@gmail.com</span>
-				<span  class="px-2">+91-99978-63901</span>
-				<span  class="px-2">Chitrakoot, Jaipur</span>
-			</div>
-			<div class="col-md-2 text-md-right text-muted">
-				<i class="fab fa-lg fa-cc-visa"></i>
-				<i class="fab fa-lg fa-cc-paypal"></i>
-				<i class="fab fa-lg fa-cc-mastercard"></i>
-			</div>
-		</section>
-	</div><!-- //container -->
-</footer>
-<!-- ========================= FOOTER END // ========================= -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-	$(document).ready(function(){
-		$('.thumb a').click(function(e){
-			e.preventDefault();
-			$('.mainImage img').attr('src', $(this).attr("href"));
-		})
-	})
-</script>
+        <footer class="section-footer w-100">
+            <div class="container">
+                <section class="footer-bottom row">
+                    <div class="col-12 col-md-2 col-lg-2 footer-copyright">
+                        <p class="text-muted mb-2 mb-md-0">
+                            © 2025 Made by <span class="highlight-text">Dhananjay</span>
+                        </p>
+                    </div>
+                    <div class="col-12 col-md-8 col-lg-8 footer-contact">
+                        <div class="contact-info">
+                            <span class="contact-item">
+                                <i class="fa fa-envelope me-1"></i>
+                                pratapsinghd665@gmail.com
+                            </span>
+                            <span class="contact-item">
+                                <i class="fa fa-phone me-1"></i>
+                                +91-99978-63901
+                            </span>
+                            <span class="contact-item">
+                                <i class="fa fa-map-marker-alt me-1"></i>
+                                Chitrakoot, Jaipur
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-2 col-lg-2 footer-payment">
+                        <div class="payment-icons">
+                            <i class="fab fa-lg fa-cc-visa"></i>
+                            <i class="fab fa-lg fa-cc-paypal"></i>
+                            <i class="fab fa-lg fa-cc-mastercard"></i>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </footer>
+        <!-- ========================= FOOTER END // ========================= -->
 
+    <style>
+        /* Footer Base Styles */
+        .section-footer {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+            padding: 0 0 25px 0;
+            position: relative;
+            overflow: hidden;
+            border-top: 2px solid rgba(0,123,255,0.1);
+        }
+
+        .section-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+			background: linear-gradient(to bottom,rgb(233, 246, 252), #ffffff);
+			{% comment %} background: linear-gradient(to right, #e0f7fa, #ffffff); {% endcomment %}
+			{% comment %} background: linear-gradient(to bottom right, #e6faff, #ffffff); {% endcomment %}
+			{% comment %} background: linear-gradient(90deg, #f0faff, #ffffff); {% endcomment %}
+			{% comment %} background: linear-gradient(135deg,rgb(229, 240, 246), #ffffff); {% endcomment %}
+            {% comment %} background: linear-gradient(45deg, transparent 49%, rgba(0,123,255,0.03) 50%, transparent 51%); {% endcomment %}
+            pointer-events: none;
+        }
+
+        .footer-bottom {
+            padding: 15px 0;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            margin-top: 0;
+        }
+
+        .footer-copyright p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 500;
+            white-space: nowrap;
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,249,250,0.6) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .footer-copyright p:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,123,255,0.1);
+        }
+
+        .highlight-text {
+            color: #007bff;
+            font-weight: 700;
+            text-shadow: 0 1px 3px rgba(0,123,255,0.2);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .contact-item {
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+            color: #6c757d;
+            white-space: nowrap;
+            padding: 8px 15px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,249,250,0.6) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .contact-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.8) 100%);
+        }
+
+        .contact-item i {
+            color: #007bff;
+            margin-right: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .payment-icons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .payment-icons i {
+            color: #6c757d;
+            transition: all 0.3s ease;
+            padding: 10px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,249,250,0.6) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .payment-icons i:hover {
+            color: #007bff;
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.8) 100%);
+        }
+
+        /* Mobile Styles (up to 767px) */
+        @media (max-width: 767px) {
+            .section-footer {
+                padding: 0 0 20px 0;
+            }
+            
+            .footer-bottom {
+                padding: 10px 0;
+                text-align: center;
+            }
+            
+            .footer-copyright {
+                order: 3;
+                margin-top: 15px;
+            }
+            
+            .footer-contact {
+                order: 1;
+                margin-bottom: 15px;
+            }
+            
+            .footer-payment {
+                order: 2;
+                margin-bottom: 10px;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .contact-item {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+            
+            .payment-icons {
+                justify-content: center;
+                gap: 12px;
+            }
+            
+            .payment-icons i {
+                font-size: 1.2rem;
+                padding: 8px;
+            }
+            
+            .footer-copyright p {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+        }
+
+        /* Tablet Styles (768px - 1023px) */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .section-footer {
+                padding: 0 0 22px 0;
+            }
+            
+            .footer-bottom {
+                padding: 12px 0;
+            }
+            
+            .footer-copyright {
+                text-align: left;
+            }
+            
+            .footer-contact {
+                text-align: center;
+            }
+            
+            .footer-payment {
+                text-align: right;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 8px;
+                align-items: center;
+            }
+            
+            .contact-item {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+            
+            .payment-icons {
+                justify-content: flex-end;
+                gap: 10px;
+            }
+            
+            .payment-icons i {
+                font-size: 1.1rem;
+                padding: 8px;
+            }
+        }
+
+        /* Large Tablet Styles (1024px - 1199px) */
+        @media (min-width: 1024px) and (max-width: 1199px) {
+            .footer-copyright {
+                text-align: left;
+            }
+            
+            .footer-contact {
+                text-align: center;
+            }
+            
+            .footer-payment {
+                text-align: right;
+            }
+            
+            .contact-info {
+                flex-direction: row;
+                gap: 12px;
+            }
+            
+            .contact-item {
+                font-size: 13px;
+                padding: 7px 13px;
+            }
+            
+            .payment-icons {
+                justify-content: flex-end;
+                gap: 8px;
+            }
+        }
+
+        /* Desktop Styles (1200px and above) */
+        @media (min-width: 1200px) {
+            .footer-copyright {
+                text-align: left;
+            }
+            
+            .footer-contact {
+                text-align: center;
+            }
+            
+            .footer-payment {
+                text-align: right;
+            }
+            
+            .contact-info {
+                flex-direction: row;
+                gap: 20px;
+            }
+            
+            .contact-item {
+                font-size: 14px;
+            }
+            
+            .payment-icons {
+                justify-content: flex-end;
+                gap: 10px;
+            }
+            
+            .payment-icons i {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* Utility Classes */
+        .me-1 {
+            margin-right: 0.25rem !important;
+        }
+
+        /* Hover Effects */
+        .contact-item:hover {
+            color: #007bff;
+        }
+
+        .contact-item:hover i {
+            color: #0056b3;
+            transform: scale(1.2);
+        }
+
+        /* Subtle animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .payment-icons i:nth-child(1) {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .payment-icons i:nth-child(2) {
+            animation: float 3s ease-in-out infinite 0.5s;
+        }
+
+        .payment-icons i:nth-child(3) {
+            animation: float 3s ease-in-out infinite 1s;
+        }
+
+        /* Gradient text animation */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .highlight-text {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 25%, #007bff 50%, #0066cc 75%, #007bff 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('.thumb a').click(function(e){
+                e.preventDefault();
+                $('.mainImage img').attr('src', $(this).attr("href"));
+            })
+        })
+    </script>
 </body>
 </html>

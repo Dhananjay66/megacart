@@ -42,35 +42,6 @@ def store(request, category_slug=None):
     return render(request, 'store/store.html', context)
 
 
-# def product_detail(request, category_slug, product_slug):
-#     try:
-#         single_product = Product.objects.get(category__slug=category_slug, slug=product_slug)
-#         in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=single_product).exists()
-#     except Exception as e:
-#         raise e
-
-#     if request.user.is_authenticated:
-#         try:
-#             orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
-#         except OrderProduct.DoesNotExist:
-#             orderproduct = None
-#     else:
-#         orderproduct = None
-
-#     # Get the reviews
-#     reviews = ReviewRating.objects.filter(product_id=single_product.id, status=True)
-
-#     # Get the product gallery
-#     product_gallery = ProductGallery.objects.filter(product_id=single_product.id)
-
-#     context = {
-#         'single_product': single_product,
-#         'in_cart'       : in_cart,
-#         'orderproduct': orderproduct,
-#         'reviews': reviews,
-#         'product_gallery': product_gallery,
-#     }
-#     return render(request, 'store/product_detail.html', context)
 def product_detail(request, category_slug, product_slug):
     try:
         single_product = Product.objects.get(category__slug=category_slug, slug=product_slug)
@@ -143,18 +114,6 @@ def submit_review(request, product_id):
 
 
 
-# @login_required
-# def add_product(request):
-#     if request.method == 'POST':
-#         form = ProductForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             product = form.save(commit=False)
-#             product.save()
-#             return redirect('store')  # or a confirmation page
-#     else:
-#         form = ProductForm()
-#     return render(request, 'store/add_product.html', {'form': form})
-
 
 # @login_required
 @login_required
@@ -181,27 +140,6 @@ def add_product(request):
         'form': form,
         'formset': formset,  # ← pass the formset to the template
     })
-
-# def add_product(request):
-#     ProductFormSet = modelformset_factory(Variation, form=VariationForm, extra=1, can_delete=False)
-#     if request.method == 'POST':
-#         form = ProductForm(request.POST, request.FILES)
-#         formset = ProductFormSet(request.POST)
-
-#         if form.is_valid() and formset.is_valid():
-#             product = form.save()
-#             for variation_form in formset:
-#                 variation = variation_form.save(commit=False)
-#                 variation.product = product
-#                 variation.save()
-#             return redirect('your_success_url')
-
-#     else:
-#         form = ProductForm()
-#         formset = ProductFormSet(queryset=Variation.objects.none())
-
-#     return render(request, 'add_product.html', {'form': form, 'formset': formset})
-
 
 
 def check_variation_stock(request):

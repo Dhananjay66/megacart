@@ -2,13 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from carts.models import CartItem
 from accounts.models import UserAddress
-from .forms import OrderForm
 import datetime
 from .models import Order, Payment, OrderProduct
 import json
 import os
 from django.conf import settings
-from store.models import Product
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt

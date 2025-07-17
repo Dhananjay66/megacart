@@ -35,10 +35,8 @@ from carts.models import Cart, CartItem
 from carts.views import _cart_id
 import requests
 
-from django.views.decorators.csrf import csrf_exempt
 from .models import UserAddress
 import json
-from django.views.decorators.http import require_http_methods
 
 
 def register(request):
@@ -67,21 +65,6 @@ def register(request):
             # Create profile
             profile = UserProfile(user=user, profile_picture='default/default-user.png')
             profile.save()
-
-            # # Send activation email...
-            # current_site = get_current_site(request)
-            # mail_subject = 'Please activate your account'
-            # message = render_to_string('accounts/account_verification_email.html', {
-            #     'user': user,
-            #     'domain': current_site,
-            #     'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            #     'token': default_token_generator.make_token(user),
-            # })
-            # to_email = email
-            # EmailMessage(mail_subject, message, to=[to_email]).send()
-
-            # # ✅ Role-based redirect inside the same block
-            # views.py
 
             if user.role == 'Customer':
                 return redirect('customer_home')
@@ -302,23 +285,6 @@ def logout(request):
     auth.logout(request)
     messages.success(request, 'You are logged out.')
     return redirect('login')
-
-
-def activate(request, uidb64, token):
-    try:
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = Account._default_manager.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
-        user = None
-
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save()
-        messages.success(request, 'Congratulations! Your account is activated.')
-        return redirect('login')
-    else:
-        messages.error(request, 'Invalid activation link')
-        return redirect('register')
 
 
 @login_required(login_url='login')
@@ -675,49 +641,6 @@ def delete_address(request, id):
     
     return render(request, 'accounts/confirm_delete.html', {'address': address})
 
-
-# @csrf_exempt
-# @login_required
-# @require_http_methods(["POST"])
-# def set_default_address(request):
-#     try:
-#         # Parse JSON data from request body
-#         data = json.loads(request.body)
-#         address_id = data.get('address_id')
-        
-#         if not address_id:
-#             return JsonResponse({
-#                 'success': False, 
-#                 'message': 'Address ID is required'
-#             }, status=400)
-        
-#         # Get the address and verify it belongs to the current user
-#         address = get_object_or_404(UserAddress, id=address_id, user=request.user)
-        
-#         # Remove default status from all user's addresses
-#         UserAddress.objects.filter(user=request.user).update(is_default=False)
-        
-#         # Set the selected address as default
-#         address.is_default = True
-#         address.save()
-        
-#         return JsonResponse({
-#             'success': True,
-#             'message': 'Default address updated successfully',
-#             'address_id': address_id
-#         })
-        
-#     except json.JSONDecodeError:
-#         return JsonResponse({
-#             'success': False,
-#             'message': 'Invalid JSON data'
-#         }, status=400)
-        
-#     except Exception as e:
-#         return JsonResponse({
-#             'success': False,
-#             'message': 'An error occurred while updating the default address'
-#         }, status=500)
 
 
 @login_required
