@@ -122,4 +122,4 @@ Thank you for making this project better! 💖
 ## 📧 Contact
 
 For any query or collaboration:  
-pratapsinghd665@gmail.com
+pratapdhananjay738@gmail.com
