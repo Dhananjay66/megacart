@@ -21,7 +21,7 @@
 
 ## 🌍 Live Demo
 
-> 🔗 **Live Demo**: [Click Here](https://megacart-3cmg.onrender.com/)
+> 🔗 **Live Demo**: [Click Here](https://megacart-5sqk.onrender.com)
 
 ---
 
