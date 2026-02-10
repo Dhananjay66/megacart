@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django static and media files
+/static/
+/media/
+
+# Django migrations
+**/migrations/
+!**/migrations/__init__.py
+
+# Environment variables and secrets
+.env
+*.env
+
+# SQLite database
+db.sqlite3
+
+# VSCode settings
+.vscode/
+
+# macOS files
+.DS_Store
+
+# Logs
+*.log
+
+# Byte-compiled files
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Coverage and test reports
+htmlcov/
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+test-results/
+
+# MyPy
+.mypy_cache/
+
+# Pytest
+.pytest_cache/
+
+# Build files
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Pip
+pip-log.txt
+
+# IDEs
+.idea/
+*.sublime-project
+*.sublime-workspace
