@@ -146,7 +146,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = [ 
-    BASE_DIR / 'megacart' / 'static',  # Only if this folder exists
+    BASE_DIR / 'static',  # Only if this folder exists
 ]
 
 # MEDIA_URL = '/media/'
