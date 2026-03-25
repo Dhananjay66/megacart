@@ -1,1 +1,0 @@
-web: gunicorn MegaCart.wsgi --log-file -
